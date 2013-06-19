@@ -6,9 +6,9 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,6 +19,7 @@
 require 'pathname'
 require 'chef/mixin/shell_out'
 require 'chef/mixin/checksum'
+require 'chef/mixin/which'
 
 class Chef
   class Cookbook
@@ -78,6 +79,7 @@ class Chef
 
       include Chef::Mixin::ShellOut
       include Chef::Mixin::Checksum
+      include Chef::Mixin::Which
 
       attr_reader :cookbook_path
 
@@ -137,7 +139,7 @@ class Chef
       end
 
       def untested_template_files
-        template_files.reject do |file| 
+        template_files.reject do |file|
           if validated?(file)
             Chef::Log.debug("Template #{file} is unchanged, skipping syntax check")
             true
@@ -169,9 +171,18 @@ class Chef
         end
       end
 
+      def erubis_path
+        @erbis_path ||=
+          begin
+            path = which("erubis")
+            Chef::Log.fatal("The erubis binary was not found in your path") if path.nil?
+            path
+          end
+      end
+
       def validate_template(erb_file)
         Chef::Log.debug("Testing template #{erb_file} for syntax errors...")
-        result = shell_out("erubis -x #{erb_file} | ruby -c")
+        result = shell_out("#{erubis_path} -x #{erb_file} | ruby -c")
         result.error!
         true
       rescue Mixlib::ShellOut::ShellCommandFailed
