@@ -172,7 +172,7 @@ class Chef
       end
 
       def erubis_path
-        @erbis_path ||=
+        @erubis_path ||=
           begin
             path = which("erubis")
             Chef::Log.fatal("The erubis binary was not found in your path") if path.nil?
