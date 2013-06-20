@@ -20,15 +20,25 @@ class Chef
   module Mixin
     module Which
 
-      def which(cmd)
-        exts = ENV['PATHEXT'] ? ENV['PATHEXT'].split(';') : ['']
-        ENV['PATH'].split(File::PATH_SEPARATOR).each do |path|
-          exts.each { |ext|
-            exe = File.join(path, "#{cmd}#{ext}")
-            return exe if File.executable? exe
-          }
+      # Acts like a shell 'which' command in ruby.
+      #
+      # === Parameters
+      # command<String>:: the command to search the PATH for
+      #
+      # === Returns
+      # path<String> or nil
+      def which(command)
+
+        # Windows fills PATHEXT with things like ".COM", ".EXE", ".BAT", etc
+        extlist = ENV['PATHEXT'].split(';')) if ENV['PATHEXT']
+        commandlist = extlist ? extlist.map { |e| "#{command}#{e}" } : [ command ]
+        ENV['PATH'].split(File::PATH_SEPARATOR).each do |dir|
+          commandpaths = commandlist.map { |cmd| File.join(dir, cmd) }
+          commandpaths.each do |path|
+            return path if File.executable? path
+          end
         end
-        return nil
+        nil
       end
 
     end
