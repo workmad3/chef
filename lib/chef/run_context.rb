@@ -18,6 +18,7 @@
 # limitations under the License.
 
 require 'chef/resource_collection'
+require 'chef/provider_resolver'
 require 'chef/cookbook_version'
 require 'chef/node'
 require 'chef/role'
@@ -50,6 +51,8 @@ class Chef
     # recipes, which is triggered by #load. (See also: CookbookCompiler)
     attr_accessor :resource_collection
 
+    attr_reader :provider_resolver
+
     # A Hash containing the immediate notifications triggered by resources
     # during the converge phase of the chef run.
     attr_accessor :immediate_notification_collection
@@ -78,8 +81,8 @@ class Chef
       @events = events
 
       @node.run_context = self
-
       @cookbook_compiler = nil
+      @provider_resolver = Chef::ProviderResolver.new(@node)
     end
 
     # Triggers the compile phase of the chef run. Implemented by
@@ -87,6 +90,7 @@ class Chef
     def load(run_list_expansion)
       @cookbook_compiler = CookbookCompiler.new(self, run_list_expansion, events)
       @cookbook_compiler.compile
+      @provider_resolver.load
     end
 
     # Adds an immediate notification to the
