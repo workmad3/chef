@@ -99,3 +99,29 @@ knife now includes a warning in the -E/--environment option that this setting is
 
 ### New configurable option :yum-lock-timeout
 You can now set the timeout for receiving the yum lock in `config.rb` by adding `yum-lock-timeout SECONDS` (default is 30 seconds).
+
+### New default for `guard_interpreter` attribute of `powershell_script` and
+    `batch` resources
+The `guard_interpreter` attribute originally introduced for all resources in
+**Chef 11.12** is now set to new default values for the following resources:
+* For the `powershell_script` resource, `guard_interpreter` is set to
+  `:powershell_script` by default. This means that by default, the **PowerShell**
+  interpreter will be used to evaluate guard expressions supplied to the
+  `only_if` and `not_if`attributes, and other features of the
+  `guard_interpreter` attribute will also be available for `powershell_script`
+  guard attributes by default.
+* For the `batch` resource, `guard_interpreter` is set to `:batch` by default.
+  This does not change the interpreter used for guards by default since Chef
+  has always used `cmd.exe`, the `batch` interpreter, for guard expressions on
+  Windows. However, it **does** change the default processor architecture of
+  the `cmd.exe` process used to evaluate the guard expression to match that of
+  the `architecture` attribute of the resource containing the guard
+  attribute. If no `architecture` attribute is specified for the resource,
+  then the guard will be evaluated using a **64-bit** interpreter process
+  (i.e. `:x86_64`) instead of a 32-bit process (`:i386`). Other features of the
+  `guard_interpreter` attribute may now be utilized with guards for the
+  `batch` resource by default.
+
+Prior to this change, it was set to `:default` for these resources, which disabled the use of Chef
+resources for guard execution in favor of shelling out to the 32-bit `cmd.exe`
+command interpreter for these and all resources.

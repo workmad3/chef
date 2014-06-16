@@ -74,6 +74,11 @@
 * [**Robert Tarrall**](https://github.com/tarrall):
   Fix Upstart provider with parameters. (CHEF-5265)
 
+
+* Set `guard_interpreter` attribute to `:powershell_script` for `powershell_script` resource default
+* Set `guard_interpreter` attribute to `:batch` for `batch` resource by default
+* Set the *PowerShell execution policy* for scripts executed by the `powershell_script` resource to *unrestricted* instead of *remotesigned*.
+* Make `batch` resource guards 64-bit instead of 32-bit by default just like `batch` script execution
 * Log resource always triggers notifications (CHEF-4028)
 * Prevent tracing? from throwing an exception when first starting chef-shell.
 * Use Upstart provider on Ubuntu 13.10+. (CHEF-5276)
