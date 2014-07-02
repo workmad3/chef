@@ -25,6 +25,17 @@ class Chef
         UPDATE_RC_D_ENABLED_MATCHES = /\/rc[\dS].d\/S|not installed/i
         UPDATE_RC_D_PRIORITIES = /\/rc([\dS]).d\/([SK])(\d\d)/i
 
+        implements :service
+
+        def self.enabled?(node)
+          node['platform_family'] == 'debian'
+        end
+
+        def self.handles?(resource, action)
+          ::File.exist?("/etc/init.d/#{resource.service_name}") &&
+            !::File.exist?("/etc/init/#{resource.service_name}.conf"
+        end
+
         def load_current_resource
           super
           @priority_success = true

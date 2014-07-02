@@ -28,53 +28,29 @@ class Chef
     include Chef::DSL::Recipe
     include Chef::Mixin::WhyRun
 
-
     class << self
-      include Enumerable
+      attr_accessor :implementations
 
-      @@providers = []
-
-      attr_reader :implementations
-      attr_reader :supported_platforms
-
-      def inherited(klass)
-        @@providers << klass
+      def implementations
+        @implementations ||= []
       end
 
-      def providers
-        @@providers
-      end
-
-      def each
-        providers.each { |provider| yield provider }
-        providers
-      end
-
-      def implements(*resources)
-        options = resources.last.is_a?(Hash) ? resources.pop : {}
-
-        @implementations = resources.map { |resource| resource.to_sym }
-        @supported_platforms = Array(options[:on_platforms] || :all)
+      def implements(*resource_names)
+        self.implementations += resource_names
       end
 
       def implements?(resource)
-        klass_name = resource.class.to_s.split('::').last
-        resource_name = klass_name.gsub(/([a-z0-9])([A-Z])/, '\1_\2').downcase
-
-        implementations && implementations.include?(resource_name.to_sym)
+        implementations.include?(resource.resource_name)
       end
 
-      def supports_platform?(platform)
-        supported_platforms && (
-          supported_platforms.include?(:all) ||
-          supported_platforms.include?(platform.to_sym))
+      def handles?(resource, action)
+        false
       end
 
       def enabled?(node)
         true
       end
     end
-
 
     attr_accessor :new_resource
     attr_accessor :current_resource

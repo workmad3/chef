@@ -16,42 +16,27 @@
 # limitations under the License.
 #
 
+require 'chef/provider_collection'
+
 class Chef
   class ProviderResolver
 
     attr_reader :node
-    attr_reader :providers
 
     def initialize(node)
+      @provider_collection = Chef::ProviderCollection.new()
       @node = node
-      @providers = []
-      @loaded = false
     end
 
-    def load(reload = false)
-      return if loaded? && !reload
-
-      @providers = [] if reload
-
-      Chef::Provider.each do |provider|
-        @providers << provider if provider.supports_platform?(@node[:platform])
+    def resolve(resource, action)
+      @provider_collection.sort {|a,b| a.to_s <=> b.to_s }.each do |klass|
+        if klass.enabled?(node) && klass.implements?(resource) && klass.handles?(resource, action)
+          provider = klass.new(resource, resource.run_context)
+          provider.action = action
+          return provider
+        end
       end
-
-      @loaded = true
-    end
-
-    def loaded?
-      !!@loaded
-    end
-
-    def resolve(resource)
-      self.load if !loaded?
-
-      providers = @providers.find_all do |provider|
-        provider.enabled?(node) && provider.implements?(resource)
-      end
-
-      resource.evaluate_providers(providers)
+      nil
     end
   end
 end

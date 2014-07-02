@@ -27,6 +27,16 @@ class Chef
 
         include Chef::Mixin::ShellOut
 
+        implements :service
+
+        def self.enabled?(node)
+          node['platform_family'] != 'debian'  # prefer debian provider for init scripts on debian
+        end
+
+        def self.handles?(resource, action)
+          ::File.exist?("/etc/init.d/#{resource.service_name}")
+        end
+
         def initialize(new_resource, run_context)
           super
           @init_command = "/etc/init.d/#{@new_resource.service_name}"

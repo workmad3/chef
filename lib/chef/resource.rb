@@ -682,8 +682,11 @@ F
         provider = self.provider.new(self, self.run_context)
         provider.action = action
         provider
-      else # fall back to old provider resolution
-        Chef::Platform.provider_for_resource(self, action)
+      else
+        # try Chef::ProviderResolver resolution
+        run_context.provider_resolver.resolve(self, action) ||
+          # fall back to old Chef::Platform resolution
+          Chef::Platform.provider_for_resource(self, action)
       end
     end
 
