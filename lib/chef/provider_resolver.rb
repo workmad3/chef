@@ -28,6 +28,13 @@ class Chef
       @node = node
     end
 
+    # return a deterministically sorted list of Chef::Provider subclasses
+    def each_provider
+      ObjectSpace.each_object(Class).sort {|a,b| a.to_s <=> b.to_s }.each do |klass|
+        yield klass if klass < Chef::Provider
+      end
+    end
+
     def resolve(resource, action)
       provider = maybe_explicit_provider(resource, action) ||
         maybe_dynamic_provider_resolution(resource, action) ||
@@ -47,7 +54,7 @@ class Chef
 
     # try dynamically finding a provider based on querying the providers to see what they support
     def maybe_dynamic_provider_resolution(resource, action)
-      @provider_collection.sort {|a,b| a.to_s <=> b.to_s }.each do |klass|
+      each_provider do |klass|
         if klass.enabled?(node) && klass.implements?(resource) && klass.handles?(resource, action)
           # Question: if we find more than one we just return the first, should we demand uniqueness
           # and throw an error instead?
