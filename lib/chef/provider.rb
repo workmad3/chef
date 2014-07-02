@@ -35,6 +35,8 @@ class Chef
         @implementations ||= []
       end
 
+      # Providers can declare that they implement one or more resources.
+      # (Question: does it make sense to map to more than one resource?)
       def implements(*resource_names)
         self.implementations += resource_names
       end
@@ -43,10 +45,15 @@ class Chef
         implementations.include?(resource.resource_name)
       end
 
+      # If the provider can handle the particular resource and action in question.
+      # The type of resource passed in here should only be resources that the provider
+      # has declared that it implements.
       def handles?(resource, action)
         false
       end
 
+      # If the provider is useful at all on the node
+      # (we should use this to remove_const the classes which are unused + then GC)
       def enabled?(node)
         true
       end
