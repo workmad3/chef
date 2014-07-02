@@ -671,19 +671,7 @@ F
     end
 
     def provider_for_action(action)
-      # leverage new platform => short_name => resource
-      # which requires explicitly setting provider in
-      # resource class
-      if self.provider
-        provider = self.provider.new(self, self.run_context)
-        provider.action = action
-        provider
-      else
-        # try Chef::ProviderResolver resolution
-        run_context.provider_resolver.resolve(self, action) ||
-          # fall back to old Chef::Platform resolution
-          Chef::Platform.provider_for_resource(self, action)
-      end
+      run_context.provider_resolver.resolve(self, action)
     end
 
     def custom_exception_message(e)

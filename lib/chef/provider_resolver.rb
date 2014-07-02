@@ -29,14 +29,38 @@ class Chef
     end
 
     def resolve(resource, action)
+      provider = maybe_explicit_provider(resource, action) ||
+        maybe_dynamic_provider_resolution(resource, action) ||
+        maybe_chef_platform_lookup(resource, action)
+      provider.action = action
+      provider
+    end
+
+    # if resource.provider is set, just return one of those objects
+    def maybe_explicit_provider(resource, action)
+      if resource.provider
+        resource.provider.new(resource, resource.run_context)
+      else
+        nil
+      end
+    end
+
+    # try dynamically finding a provider based on querying the providers to see what they support
+    def maybe_dynamic_provider_resolution(resource, action)
       @provider_collection.sort {|a,b| a.to_s <=> b.to_s }.each do |klass|
         if klass.enabled?(node) && klass.implements?(resource) && klass.handles?(resource, action)
-          provider = klass.new(resource, resource.run_context)
-          provider.action = action
-          return provider
+          # Question: if we find more than one we just return the first, should we demand uniqueness
+          # and throw an error instead?
+          return klass.new(resource, resource.run_context)
         end
       end
       nil
     end
+
+    # try the old static lookup of providers by platform
+    def maybe_chef_platform_lookup(resource, action)
+      Chef::Platform.provider_for_resource(resource, action)
+    end
   end
 end
+
