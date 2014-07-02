@@ -30,7 +30,7 @@ class Chef
         implements :service
 
         def self.enabled?(node)
-          ::Dir.exist?("/etc/init")
+          ::File.exist?("/etc/init")
         end
 
         def self.handles?(resource, action)
