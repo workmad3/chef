@@ -33,7 +33,7 @@ class Chef
 
         def self.handles?(resource, action)
           ::File.exist?("/etc/init.d/#{resource.service_name}") &&
-            !::File.exist?("/etc/init/#{resource.service_name}.conf"
+            !::File.exist?("/etc/init/#{resource.service_name}.conf")
         end
 
         def load_current_resource
