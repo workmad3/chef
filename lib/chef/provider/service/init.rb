@@ -30,7 +30,8 @@ class Chef
         implements :service
 
         def self.enabled?(node)
-          !%w{debian mac_os_x rhel solaris windows gentoo suse}.include?(node['platform_family'])
+          # most platforms subclass and extend this provider and don't use it directly
+          !%w{arch debian mac_os_x rhel solaris windows gentoo suse}.include?(node['platform_family'])
         end
 
         def self.handles?(resource, action)

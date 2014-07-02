@@ -26,6 +26,17 @@ class Chef
     class Service
       class Freebsd < Chef::Provider::Service::Init
 
+        implements :service
+
+        def self.enabled?(node)
+          !%w{freebsd netbsd}.include?(node['platform'])
+        end
+
+        def self.handles?(resource, action)
+          ::File.exist?("/etc/rc.d/#{resource.service_name}") ||
+            ::File.exist?("/usr/local/etc/rc.d/#{resource.service_name}")
+        end
+
         include Chef::Mixin::ShellOut
 
         def load_current_resource

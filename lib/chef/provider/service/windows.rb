@@ -26,6 +26,16 @@ end
 
 class Chef::Provider::Service::Windows < Chef::Provider::Service
 
+  implements :service
+
+  def self.enabled?(node)
+    node['platform_family'] == "windows"
+  end
+
+  def self.handles?(resource, action)
+    true
+  end
+
   include Chef::Mixin::ShellOut
 
   #Win32::Service.get_start_type

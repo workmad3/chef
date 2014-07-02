@@ -32,6 +32,7 @@ class Chef
         end
 
         def self.handles?(resource, action)
+          # only use this debian init provider if there's no upstart definition
           ::File.exist?("/etc/init.d/#{resource.service_name}") &&
             !::File.exist?("/etc/init/#{resource.service_name}.conf")
         end
