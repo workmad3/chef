@@ -30,7 +30,7 @@ class Chef
         implements :service
 
         def self.enabled?(node)
-          node['platform_family'] != 'debian'  # prefer debian provider for init scripts on debian
+          !%w{debian mac_os_x rhel solaris windows gentoo suse}.include?(node['platform_family'])
         end
 
         def self.handles?(resource, action)
