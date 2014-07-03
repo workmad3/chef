@@ -16,15 +16,12 @@
 # limitations under the License.
 #
 
-require 'chef/provider_collection'
-
 class Chef
   class ProviderResolver
 
     attr_reader :node
 
     def initialize(node)
-      @provider_collection = Chef::ProviderCollection.new()
       @node = node
     end
 
