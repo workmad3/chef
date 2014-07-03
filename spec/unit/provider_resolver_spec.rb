@@ -20,15 +20,11 @@ require 'spec_helper'
 
 describe Chef::ProviderResolver do
 
-  let(:platform) { "ubuntu" }
-
-  let(:platform_family) { "debian" }
-
   let(:node) do
     node = Chef::Node.new
     node.automatic_attrs[:platform] = platform
     node.automatic_attrs[:platform_family] = platform_family
-    node.automatic_attrs[:platform_version] = "14.04"
+    node.automatic_attrs[:platform_version] = platform_version
     node
   end
 
@@ -38,30 +34,50 @@ describe Chef::ProviderResolver do
 
   let(:run_context) { Chef::RunContext.new(node, {}, events) }
 
-  let(:resource) { Chef::Resource::Service.new("ntp", run_context) }
-
-  let(:action) { :start }
-
   let(:resolved_provider) { provider_resolver.resolve(resource, action) }
 
-  it "does a thing" do
-    allow(File).to receive(:exist?).with("/etc/init").and_return(true)
-    allow(File).to receive(:exist?).with("/etc/init.d/ntp").and_return(true)
-    allow(File).to receive(:exist?).with("/etc/init/ntp.conf").and_return(false)
-    expect(resolved_provider).to be_a(Chef::Provider::Service::Debian)
-  end
+  describe "resolving service resource" do
 
-  it "does a thing" do
-    allow(File).to receive(:exist?).with("/etc/init").and_return(true)
-    allow(File).to receive(:exist?).with("/etc/init.d/ntp").and_return(true)
-    allow(File).to receive(:exist?).with("/etc/init/ntp.conf").and_return(true)
-    expect(resolved_provider).to be_a(Chef::Provider::Service::Upstart)
-  end
+    let(:resource) { Chef::Resource::Service.new("ntp", run_context) }
 
-  it "does a thing" do
-    allow(File).to receive(:exist?).with("/etc/init").and_return(true)
-    allow(File).to receive(:exist?).with("/etc/init.d/ntp").and_return(false)
-    allow(File).to receive(:exist?).with("/etc/init/ntp.conf").and_return(true)
-    expect(resolved_provider).to be_a(Chef::Provider::Service::Upstart)
+    let(:action) { :start }
+
+    describe "on Ubuntu 14.04" do
+      let(:platform) { "ubuntu" }
+      let(:platform_family) { "debian" }
+      let(:platform_version) { "14.04" }
+
+      before do
+        allow(File).to receive(:exist?).with("/etc/init").and_return(true)
+      end
+
+      it "when only the SysV init script exists, it returns a Service::Debian provider" do
+        allow(File).to receive(:exist?).with("/etc/init.d/ntp").and_return(true)
+        allow(File).to receive(:exist?).with("/etc/init/ntp.conf").and_return(false)
+        expect(provider_resolver).not_to receive(:maybe_chef_platform_lookup)
+        expect(resolved_provider).to be_a(Chef::Provider::Service::Debian)
+      end
+
+      it "when both SysV and Upstart scripts exist, it returns a Service::Upstart provider" do
+        allow(File).to receive(:exist?).with("/etc/init.d/ntp").and_return(true)
+        allow(File).to receive(:exist?).with("/etc/init/ntp.conf").and_return(true)
+        expect(provider_resolver).not_to receive(:maybe_chef_platform_lookup)
+        expect(resolved_provider).to be_a(Chef::Provider::Service::Upstart)
+      end
+
+      it "when only the Upstart script exists, it returns a Service::Upstart provider" do
+        allow(File).to receive(:exist?).with("/etc/init.d/ntp").and_return(false)
+        allow(File).to receive(:exist?).with("/etc/init/ntp.conf").and_return(true)
+        expect(provider_resolver).not_to receive(:maybe_chef_platform_lookup)
+        expect(resolved_provider).to be_a(Chef::Provider::Service::Upstart)
+      end
+
+      it "when both do not exist, it calls the old style provider resolver and returns a Debian Provider" do
+        allow(File).to receive(:exist?).with("/etc/init.d/ntp").and_return(false)
+        allow(File).to receive(:exist?).with("/etc/init/ntp.conf").and_return(false)
+        expect(provider_resolver).to receive(:maybe_chef_platform_lookup).with(resource, action).and_call_original
+        expect(resolved_provider).to be_a(Chef::Provider::Service::Debian)
+      end
+    end
   end
 end
