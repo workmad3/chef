@@ -29,7 +29,7 @@ class Chef
         implements :service
 
         def self.enabled?(node)
-          !%w{freebsd netbsd}.include?(node['platform'])
+          %w{freebsd netbsd}.include?(node['platform'])
         end
 
         def self.handles?(resource, action)
