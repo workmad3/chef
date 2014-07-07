@@ -42,13 +42,12 @@ describe Chef::ProviderResolver do
 
     let(:action) { :start }
 
-    describe "on Ubuntu 14.04" do
-      let(:platform) { "ubuntu" }
-      let(:platform_family) { "debian" }
-      let(:platform_version) { "14.04" }
-
+    shared_examples_for "a debian platform with upstart and update-rc.d" do
       before do
         allow(File).to receive(:exist?).with("/etc/init").and_return(true)
+        allow(File).to receive(:exist?).with("/sbin/start").and_return(true)
+        allow(File).to receive(:exist?).with("/usr/sbin/update-rc.d").and_return(true)
+        allow(File).to receive(:exist?).with("/sbin/insserv").and_return(false)
       end
 
       it "when only the SysV init script exists, it returns a Service::Debian provider" do
@@ -79,5 +78,119 @@ describe Chef::ProviderResolver do
         expect(resolved_provider).to be_a(Chef::Provider::Service::Debian)
       end
     end
+
+    shared_examples_for "a debian platform using the insserv provider" do
+      before do
+        allow(File).to receive(:exist?).with("/etc/init").and_return(true)
+        allow(File).to receive(:exist?).with("/sbin/start").and_return(false)
+        allow(File).to receive(:exist?).with("/usr/sbin/update-rc.d").and_return(true)
+        allow(File).to receive(:exist?).with("/sbin/insserv").and_return(true)
+      end
+    end
+
+    describe "on Ubuntu 14.04" do
+      let(:platform) { "ubuntu" }
+      let(:platform_family) { "debian" }
+      let(:platform_version) { "14.04" }
+
+      it_behaves_like "a debian platform using the debian provider"
+    end
+
+    describe "on Debian 4.0" do
+      let(:platform) { "debian" }
+      let(:platform_family) { "debian" }
+      let(:platform_version) { "4.0" }
+
+      it_behaves_like "a debian platform using the debian provider"
+    end
+
+    describe "on Debian 7.0" do
+      let(:platform) { "debian" }
+      let(:platform_family) { "debian" }
+      let(:platform_version) { "7.0" }
+
+      it_behaves_like "a debian platform using the insserv provider"
+    end
   end
 end
+
+#            :ubuntu   => {
+#                :service => Chef::Provider::Service::Debian,
+#            :gcel   => {
+#                :service => Chef::Provider::Service::Debian,
+#            :linaro   => {
+#                :service => Chef::Provider::Service::Debian,
+#            :raspbian   => {
+#                :service => Chef::Provider::Service::Debian,
+#            :linuxmint   => {
+#                :service => Chef::Provider::Service::Upstart,
+#            :debian => {
+#              :default => {
+#                :service => Chef::Provider::Service::Debian,
+#              ">= 6.0" => {
+#                :service => Chef::Provider::Service::Insserv
+
+#            :mac_os_x => {
+#                :service => Chef::Provider::Service::Macosx,
+#            :mac_os_x_server => {
+#                :service => Chef::Provider::Service::Macosx,
+#            :freebsd => {
+#                :service => Chef::Provider::Service::Freebsd,
+#            :xenserver   => {
+#                :service => Chef::Provider::Service::Redhat,
+#            :xcp   => {
+#                :service => Chef::Provider::Service::Redhat,
+#            :centos   => {
+#                :service => Chef::Provider::Service::Redhat,
+#            :amazon   => {
+#                :service => Chef::Provider::Service::Redhat,
+#            :scientific => {
+#                :service => Chef::Provider::Service::Redhat,
+#            :fedora   => {
+#                :service => Chef::Provider::Service::Redhat,
+#            :opensuse     => {
+#                :service => Chef::Provider::Service::Redhat,
+#            :suse     => {
+#                :service => Chef::Provider::Service::Redhat,
+#            :oracle  => {
+#                :service => Chef::Provider::Service::Redhat,
+#            :redhat   => {
+#                :service => Chef::Provider::Service::Redhat,
+#            :ibm_powerkvm   => {
+#                :service => Chef::Provider::Service::Redhat,
+#            :cloudlinux   => {
+#                :service => Chef::Provider::Service::Redhat,
+#            :gentoo   => {
+#                :service => Chef::Provider::Service::Gentoo,
+#            :arch   => {
+#                :service => Chef::Provider::Service::Systemd,
+#            :mswin => {
+#                :service => Chef::Provider::Service::Windows,
+#            :mingw32 => {
+#                :service => Chef::Provider::Service::Windows,
+#            :windows => {
+#                :service => Chef::Provider::Service::Windows,
+#            :openindiana => {
+#                :service => Chef::Provider::Service::Solaris,
+#            :opensolaris => {
+#                :service => Chef::Provider::Service::Solaris,
+#            :nexentacore => {
+#                :service => Chef::Provider::Service::Solaris,
+#            :omnios => {
+#                :service => Chef::Provider::Service::Solaris,
+#            :solaris2 => {
+#                :service => Chef::Provider::Service::Solaris,
+#            :smartos => {
+#                :service => Chef::Provider::Service::Solaris,
+#            :netbsd => {
+#                :service => Chef::Provider::Service::Freebsd,
+#            :openbsd => {
+#                  ???
+#            :hpux => {
+#                  ???
+#            :aix => {
+#                  ???
+#            :exherbo => {
+#                :service => Chef::Provider::Service::Systemd,
+#            :default => {
+#              :service => Chef::Provider::Service::Init,

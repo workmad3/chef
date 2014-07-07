@@ -31,7 +31,10 @@ class Chef
 
         def self.enabled?(node)
           # most platforms subclass and extend this provider and don't use it directly
-          !%w{arch debian mac_os_x rhel solaris windows gentoo suse}.include?(node['platform_family'])
+          # FIXME: somehow make this the default if the other service providers don't work.
+          return false if ::File.exist?("/usr/sbin/update-rc.d")
+          return false if ::File.exist?("/sbin/insserv")
+          !%w{arch mac_os_x rhel solaris windows gentoo suse}.include?(node['platform_family'])
         end
 
         def self.handles?(resource, action)

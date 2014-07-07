@@ -28,7 +28,7 @@ class Chef
         implements :service
 
         def self.enabled?(node)
-          node['platform_family'] == 'debian'
+          node['platform_family'] == 'debian' && ::File.exist?("/usr/sbin/update-rc.d") && !::File.exist?("/sbin/insserv")
         end
 
         def self.handles?(resource, action)

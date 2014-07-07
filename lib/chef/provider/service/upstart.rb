@@ -30,7 +30,8 @@ class Chef
         implements :service
 
         def self.enabled?(node)
-          ::File.exist?("/etc/init")
+          # NB: debian >= 6.0 has /etc/init but does not have upstart
+          ::File.exist?("/etc/init") && ::File.exist?("/sbin/start")
         end
 
         def self.handles?(resource, action)
