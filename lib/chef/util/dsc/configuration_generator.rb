@@ -107,7 +107,7 @@ class Chef::Util::DSC
     end
 
     def get_configuration_document(document_path)
-      ::File.open(document_path, 'rb') do | file |
+      ::File.open(document_path, 'rb:BOM|UTF-16LE') do | file |
         file.read
       end
     end

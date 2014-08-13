@@ -23,12 +23,16 @@ class Chef::Util::DSC
     def initialize(node, configuration_path)
       @node = node
       @configuration_path = configuration_path
+      @lcm_connection = get_lcm_connection
       clear_execution_time
     end
     
     def test_configuration(configuration_document)
+      result = lcm_test_configuration(configuration_document)
       status = run_configuration_cmdlet(configuration_document)
-      configuration_update_required?(status.return_value)
+      result2 = configuration_update_required?(status.return_value)
+      puts "\nResult: WMI: #{result}, POSH: #{result2}\n"
+      result
     end
     
     def set_configuration(configuration_document)
@@ -42,6 +46,8 @@ class Chef::Util::DSC
     end
 
     private
+
+    include Chef::Mixin::WindowsArchitectureHelper
 
     def run_configuration_cmdlet(configuration_document, apply_configuration = false)
       Chef::Log.debug("DSC: Calling DSC Local Config Manager to #{apply_configuration ? "set" : "test"} configuration document.")
@@ -84,6 +90,40 @@ class Chef::Util::DSC
 
     def configuration_document_path
       File.join(@configuration_path,'..mof')
+    end
+
+    def get_lcm_connection
+#      with_os_architecture(@node) do
+        namespace = '/root/Microsoft/Windows/DesiredStateConfiguration'
+        lcm_class_name = 'MSFT_DSCLocalConfigurationManager'
+        lcm_moniker = "winmgmts://.#{namespace}:#{lcm_class_name}"
+        WIN32OLE.connect(lcm_moniker)
+#      end
+    end
+    
+    def lcm_test_configuration(configuration_document)
+      with_os_architecture(@node) do
+        lcm2 = get_lcm_connection
+        document_bytes = get_document_bytes(configuration_document)
+#        result1 = @lcm_connection.SendConfiguration(document_bytes, true)
+        result1 = lcm2.SendConfiguration(document_bytes, true)
+        puts "\nResult1: #{result1}" 
+        is_in_desired_state_out_parameter = false
+        out_parameter2 = []
+#        result2 = @lcm_connection.TestConfiguration(nil, false, out_parameter2)
+        result2 = lcm2.TestConfiguration(nil, false, out_parameter2)
+        puts "\nResult2: #{result2}" 
+        is_in_desired_state = WIN32OLE::ARGV[1]
+        puts "\nResult: #{is_in_desired_state}" 
+        ! is_in_desired_state
+      end
+    end
+
+    def get_document_bytes(configuration_document)
+      encoded_document = configuration_document.dup.encode!(Encoding::UTF_8)
+      document_bytes = []
+      encoded_document.each_byte {|c| document_bytes.concat([c]) }
+      document_bytes
     end
 
     def parse_what_if_output(what_if_output)
