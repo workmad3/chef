@@ -25,13 +25,32 @@ Instance            Driver    Provisioner  Last Action
 webapp-ubuntu-1204  Vagrant   ChefSolo     <Not Created>
 ```
 
-## Testing
+## Testing locally
 We use Test Kitchen to build instances, test client code, and destroy instances. If
-you are unfamiliar with Test Kitchen we recommend checking out the [tutorial](http://kitchen.ci/)
-along with the `kitchen-vagrant` [driver documentation](https://github.com/test-kitchen/kitchen-vagrant).
-Test Kitchen is configured to manipulate instances using [Vagrant](http://www.vagrantup.com/)
-when testing locally, and [Amazon EC2](http://aws.amazon.com/ec2/) when testing
-pull requests on [Travis CI](https://travis-ci.com).
+you are unfamiliar with Test Kitchen we recommend checking out the [Getting Started Guide](http://kitchen.ci/docs/getting-started),
+though most of the information you'll need to run these tests is documented here.
+
+### Configuring your tests
+You will need to configure the provisioner before running the tests. Test Kitchen is configured
+for local testing in the `.kitchen.yml` file which resides in this directory.
+
+Kitchen uses the `chef_solo` provisioner to run chef client on a box before any tests run.
+The provisioner can be configured to pull client source code from a GitHub repository using any
+valid Git reference. By default, the provisioner is configured to pull your most recent commit
+to `opscode/chef`. You can change this by modifying the `github:` and `branch:` options under
+`provisioner:` in `.kitchen.yml`.
+* `github:`: Set this to `"<your_username>/<your_chef_repo>"`. The default is `"opscode/chef"`.
+* `branch:`: This can be any valid git reference (e.g., branch name, tag, or commit SHA). If omitted, it defaults to `master`.
+
+The branch you choose **must** be accessible on GitHub. You cannot use a local commit at this time.
+
+**Please return all provisioner settings to their original values before submitting
+a pull request for review.** Unless, of course, your changes are enhancements to the default provisioner settings.
+
+Once configured, you can run the tests against your client code:
+```shell
+chef/kitchen-tests$ bundle exec kitchen test
+```
 
 ### Commands
 Kitchen instances are led through a series of states. The instance states, and the actions
@@ -61,29 +80,23 @@ The `test` command takes one or more instances through all the states, in order:
 To see a list of available commands, type `bundle exec kitchen help`. To see more information
 about a particular command, type `bundle exec kitchen help <command>`.
 
-### Configuring your tests
-Test Kitchen is configured for local testing in the `.kitchen.yml` file which resides in this directory.
-You will need to configure the provisioner before running the tests.
 
-The provisioner can be configured to pull client source code from a GitHub repository using any
-valid Git reference. You are encouraged to modify any of these settings, but please return them
-to their original values before submitting a pull request for review (unless, of course, your
-changes are enhancements to the default provisioner settings).
+## Testing pull requests
+These end-to-end tests are also configured to run with Travis on EC2 instances. The configuration
+for this is specified in `.kitchen.travis.yml`. Travis is set up to run these tests automatically
+when a pull request is submitted or merged into the master branch of opscode/chef.
 
-By default, the provisioner is configured to pull your most recent commit to `opscode/chef`. You
-can change this by modifying the `github` and `branch` provisioner options:
-* `github`: Set this to `"<your_username>/<your_chef_repo>"`. The default is `"opscode/chef"`.
-* `branch`: This can be any valid git reference (e.g., branch name, tag, or commit SHA). If omitted, it defaults to `master`.
+### Forked repositories
+[Secure environment variables](http://docs.travis-ci.com/user/build-configuration/#Secure-environment-variables)
+are used to transfer sensitive data, such as the AWS secret access key and private SSH keys, to
+Travis so that it can interact with EC2 instances securely. Unfortunately, pull
+requests from forked repositories [don't have access to secure environment variables](http://docs.travis-ci.com/user/pull-requests/#Security-Restrictions-when-testing-Pull-Requests).
+If you are submitting a pull request from a forked repository, these tests won't be run
+until the code is merged into master.
 
-The branch you choose must be accessible on GitHub. You cannot use a local commit at this time.
-
-### Testing pull requests
-These end-to-end tests are also configured to run with Travis on EC2 instances when you submit a pull request
-to `opscode/chef`. Kitchen is configured to pull chef client source code from the branch it is testing. There
-is no need to modify `.kitchen.travis.yml` unless you are contributing tests.
+We are looking into expanding this to cover contributions from outside opscode and will
+provide an update as soon as that functionality is provided.
 
 ## Contributing
-We would love to fill out our end-to-end testing coverage! If you have cookbooks and tests that you would
-like to see become a part of client testing, we encourage you to submit a pull request with your additions.
-We request that you do not add platforms to `.kitchen.travis.yml`. Please file a request to add a
-platform under [Issues](https://github.com/opscode/chef/issues).
+We're looking for help to increase the coverage of these tests across other platforms. You are encouraged
+to submit a pull request to expand test coverage of resources and providers to platforms that are important to you.
