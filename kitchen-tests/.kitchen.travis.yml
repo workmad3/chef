@@ -6,7 +6,7 @@ driver_config:
   iam_profile_name: <%= ENV['IAM_PROFILE_NAME'] %>
 
 provisioner:
-  name: chef_solo
+  name: chef_zero
   github: <%= ENV['TRAVIS_REPO_SLUG'] %>
   branch: <%= ENV['TRAVIS_COMMIT'] %>
   require_chef_omnibus: true
