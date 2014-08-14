@@ -11,6 +11,8 @@ provisioner:
   branch: <%= ENV['TRAVIS_COMMIT'] %>
   require_chef_omnibus: true
   data_path: test/fixtures
+  client_rb:
+    diff_disabled: true
 
 platforms:
   - name: ubuntu-12.04
