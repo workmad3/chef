@@ -14,11 +14,11 @@ include SpecInfra::Helper::Properties
 # os[:release] # OS release version (cleaned up in v2)
 # os[:arch]
 osmapping = {
-#   'RedHat' => {
-#     :platform_family => 'rhel',
-#     :platform => 'centos',
-#     :platform_version => '6.5'
-#   },
+   'RedHat' => {
+     :platform_family => 'rhel',
+     :platform => 'centos',
+     :platform_version => '6.4'
+   },
 #   'RedHat7' => {
 #     :platform_family => 'rhel',
 #     :platform => 'centos',
