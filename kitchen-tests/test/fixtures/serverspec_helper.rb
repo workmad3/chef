@@ -17,7 +17,7 @@ osmapping = {
    'RedHat' => {
      :platform_family => 'rhel',
      :platform => 'centos',
-     :platform_version => '6.4'
+     :platform_version => '6.5'
    },
 #   'RedHat7' => {
 #     :platform_family => 'rhel',
