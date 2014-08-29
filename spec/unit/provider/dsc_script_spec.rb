@@ -74,7 +74,7 @@ describe Chef::Provider::DscScript do
 
   describe '#generate_configuration_document' do
     # I think integration tests should cover these cases
-    
+
     it 'uses configuration_document_from_script_path when a dsc script file is given' do
       @provider.stub(:load_current_resource)
       @resource.command("path_to_script")
@@ -107,7 +107,7 @@ describe Chef::Provider::DscScript do
       dsc_resource_info = Chef::Util::DSC::ResourceInfo.new('resource', true, ['will change something'])
       @provider.stub(:run_configuration).with(:test).and_return([dsc_resource_info])
       @provider.stub(:run_configuration).with(:set)
-      
+
       @provider.run_action(:run)
       @resource.should be_updated
 
@@ -115,9 +115,29 @@ describe Chef::Provider::DscScript do
 
     it 'should not converge if the script is already converged' do
       @provider.stub(:run_configuration).with(:test).and_return([])
-      
+
       @provider.run_action(:run)
       @resource.should_not be_updated
+    end
+  end
+
+  describe '#generate_description' do
+    it 'removes the resource name from the beginning of any log line from the LCM' do
+      dsc_resource_info = Chef::Util::DSC::ResourceInfo.new('resourcename', true, ['resourcename doing something', 'lastline'])
+      @provider.instance_variable_set('@dsc_resources_info', [dsc_resource_info])
+      @provider.send(:generate_description)[1].should match(/converge DSC resource resourcename by doing something/)
+    end
+
+    it 'ignores the last line' do
+      dsc_resource_info = Chef::Util::DSC::ResourceInfo.new('resourcename', true, ['resourcename doing something', 'lastline'])
+      @provider.instance_variable_set('@dsc_resources_info', [dsc_resource_info])
+      @provider.send(:generate_description)[1].should_not match(/lastline/)
+    end
+
+    it 'reports a dsc resource has not been changed if the LCM reported no change was required' do
+      dsc_resource_info = Chef::Util::DSC::ResourceInfo.new('resourcename', false, ['resourcename does nothing', 'lastline'])
+      @provider.instance_variable_set('@dsc_resources_info', [dsc_resource_info])
+      @provider.send(:generate_description)[1].should match(/converge DSC resource resourcename by doing nothing/)
     end
   end
 end
